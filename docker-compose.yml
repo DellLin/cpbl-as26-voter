@@ -1,0 +1,13 @@
+services:
+  voter:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: cpbl-as26-voter:latest
+    container_name: cpbl-as26-voter
+    restart: unless-stopped
+    environment:
+      SESSION_DIR: /data/session
+      ALLOW_INTERACTIVE_TOKEN_REFRESH: "false"
+    volumes:
+      - ./session:/data/session

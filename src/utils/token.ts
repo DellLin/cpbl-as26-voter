@@ -1,14 +1,15 @@
 import { formatDuration, intervalToDuration } from 'date-fns'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
-import { dirname, resolve } from 'node:path'
-import { chromium } from 'playwright'
+import { dirname } from 'node:path'
 
 import axios from 'axios'
 import type { TokenState, VerifyResponse } from '../types.js'
 import { logInfo } from './logger.js'
+import { resolveSessionPath } from './session.js'
 
-const tokenPath = resolve('session/token.json')
-const authPath = resolve('session/auth.json')
+const tokenPath = resolveSessionPath('token.json')
+const authPath = resolveSessionPath('auth.json')
+const interactiveRefreshEnabled = (process.env.ALLOW_INTERACTIVE_TOKEN_REFRESH ?? 'false').toLowerCase() === 'true'
 
 export function saveToken(token: string): void {
   mkdirSync(dirname(tokenPath), { recursive: true })
@@ -48,6 +49,11 @@ export async function isTokenStale(): Promise<boolean> {
 }
 
 export async function refreshToken(): Promise<string> {
+  if (!interactiveRefreshEnabled) {
+    throw new Error('Interactive token refresh is disabled. Provide a valid token in session/token.json.')
+  }
+
+  const { chromium } = await import('playwright')
   logInfo('Attempting refresh token...')
 
   const browser = await chromium.launch({ headless: false })
@@ -105,7 +111,14 @@ export async function refreshToken(): Promise<string> {
 
 export async function getToken(): Promise<string> {
   const isStale = await isTokenStale()
-  if (isStale) await refreshToken()
+  if (isStale) {
+    if (!interactiveRefreshEnabled) {
+      throw new Error(
+        'Token is missing or expired. Please provide a valid session/token.json, or set ALLOW_INTERACTIVE_TOKEN_REFRESH=true to enable browser login.',
+      )
+    }
+    await refreshToken()
+  }
   const state = readToken()
   return state.token
 }

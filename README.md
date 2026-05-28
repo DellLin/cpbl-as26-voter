@@ -44,12 +44,22 @@ npm start
 yarn start
 ```
 
-This is the only entrypoint. It opens an interactive menu with two options:
+This is the only entrypoint. It starts voting immediately, then runs the recurring scheduler.
 
-| Option     | Description                                                                                                     |
-| ---------- | --------------------------------------------------------------------------------------------------------------- |
-| **start**  | Votes immediately, then runs the recurring scheduler                                                            |
-| **config** | Fetches the latest candidates and prompts to select players. Selections are saved to `session/candidates.json`. |
+### Non-interactive mode (for automation / Docker)
+
+The app now supports a non-interactive startup path:
+
+- it starts the scheduler directly
+- it does not require CLI prompts
+- by default it does not open a browser to refresh token
+
+Environment variables:
+
+| Variable                          | Default   | Description                                                    |
+| --------------------------------- | --------- | -------------------------------------------------------------- |
+| `SESSION_DIR`                     | `session` | Directory containing session files                             |
+| `ALLOW_INTERACTIVE_TOKEN_REFRESH` | `false`   | If `true`, Playwright login flow is allowed when token expires |
 
 ### Voting schedule
 
@@ -57,19 +67,59 @@ After the immediate startup vote, the scheduler picks the next upcoming hour fro
 
 ### Token refresh
 
-When the LINE access token is missing or expired, the app automatically opens a non-headless Chromium window and navigates to the vote page. If the saved browser session is still valid, the token is captured automatically. Otherwise, complete the LINE login manually in the opened browser window — the script will resume once the token is intercepted.
+When `ALLOW_INTERACTIVE_TOKEN_REFRESH=false` (default), the app will not open a browser. If token is missing or expired, it exits with an error and asks you to provide a fresh `token.json`.
+
+If you set `ALLOW_INTERACTIVE_TOKEN_REFRESH=true`, the app can still use Playwright login flow to capture a new token.
 
 ---
 
 ## Session files
 
-All session files are stored locally only and never leave your machine.
+All session files are local files and can be moved to any directory via `SESSION_DIR`.
 
-| File                      | Purpose                                                               |
-| ------------------------- | --------------------------------------------------------------------- |
-| `session/candidates.json` | Selected candidate `searchId` list, run config script to overwrite it |
-| `session/auth.json`       | Playwright browser storage state (cookies / localStorage)             |
-| `session/token.json`      | LINE access token and capture timestamp                               |
+| File                      | Purpose                                                           |
+| ------------------------- | ----------------------------------------------------------------- |
+| `session/candidates.json` | Selected candidate `searchId` list (required for vote submission) |
+| `session/auth.json`       | Playwright browser storage state (cookies / localStorage)         |
+| `session/token.json`      | LINE access token and capture timestamp                           |
+
+For Docker usage, mount this folder from host and manage files yourself.
+
+---
+
+## Docker
+
+### Build image
+
+```bash
+docker build -t cpbl-as26-voter .
+```
+
+### Prepare external session folder
+
+Create a host folder and place at least these files inside:
+
+- `auth.json`
+- `token.json`
+- `candidates.json` (required for vote submission)
+
+Example:
+
+```bash
+mkdir -p ./session
+```
+
+### Run container
+
+```bash
+docker run --rm \
+	-e SESSION_DIR=/data/session \
+	-e ALLOW_INTERACTIVE_TOKEN_REFRESH=false \
+	-v "$(pwd)/session:/data/session" \
+	cpbl-as26-voter
+```
+
+If `token.json` is expired and `ALLOW_INTERACTIVE_TOKEN_REFRESH=false`, the app will fail fast with a clear error and exit.
 
 ---
 

@@ -1,0 +1,7 @@
+node_modules
+dist
+session
+.git
+.gitignore
+README.md
+assets

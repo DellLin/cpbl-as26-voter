@@ -1,13 +1,14 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
-import { dirname, resolve } from 'node:path'
+import { dirname } from 'node:path'
 
 import axios from 'axios'
 
 import type { Candidate, CandidatesResponse, Item } from '../types.js'
 import { expectedPositions } from './constants.js'
 import { logInfo } from './logger.js'
+import { resolveSessionPath } from './session.js'
 
-export const candidatesPath = resolve('session/candidates.json')
+export const candidatesPath = resolveSessionPath('candidates.json')
 
 export function saveCandidates(candidates: string[]): void {
   mkdirSync(dirname(candidatesPath), { recursive: true })

@@ -1,43 +1,9 @@
-import prompts from 'prompts'
-
-import { configCommand } from './config.js'
 import { startCommand } from './scheduler.js'
-import { MenuAction } from './types.js'
 import { logError, logInfo } from './utils/logger.js'
 
 async function main(): Promise<void> {
-  while (true) {
-    const { action } = await prompts(
-      {
-        type: 'select',
-        name: 'action',
-        message: 'Choose an action',
-        choices: [
-          { title: 'start', value: MenuAction.Start },
-          { title: 'config', value: MenuAction.Config },
-        ],
-        initial: 0,
-      },
-      {
-        onCancel: () => true,
-      },
-    )
-
-    switch (action) {
-      case MenuAction.Start: {
-        await startCommand()
-        return
-      }
-      case MenuAction.Config: {
-        await configCommand()
-        break
-      }
-      default: {
-        logInfo('Exit.')
-        return
-      }
-    }
-  }
+  logInfo('Start mode only (non-interactive).')
+  await startCommand()
 }
 
 main().catch((error) => {
