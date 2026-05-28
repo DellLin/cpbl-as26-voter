@@ -9,6 +9,7 @@ services:
     environment:
       SESSION_DIR: /data/session
       ALLOW_INTERACTIVE_TOKEN_REFRESH: "false"
+      TZ: Asia/Taipei
     volumes:
       - ./session:/data/session
       - /etc/localtime:/etc/localtime:ro

@@ -21,6 +21,7 @@ RUN apt-get update \
 ENV NODE_ENV=production
 ENV SESSION_DIR=/data/session
 ENV ALLOW_INTERACTIVE_TOKEN_REFRESH=false
+ENV TZ=Asia/Taipei
 
 COPY package.json ./
 RUN npm install --omit=dev
