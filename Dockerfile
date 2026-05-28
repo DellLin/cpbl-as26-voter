@@ -14,6 +14,10 @@ FROM node:22-bookworm-slim AS runtime
 
 WORKDIR /app
 
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
 ENV NODE_ENV=production
 ENV SESSION_DIR=/data/session
 ENV ALLOW_INTERACTIVE_TOKEN_REFRESH=false

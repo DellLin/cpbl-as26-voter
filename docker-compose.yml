@@ -11,3 +11,4 @@ services:
       ALLOW_INTERACTIVE_TOKEN_REFRESH: "false"
     volumes:
       - ./session:/data/session
+      - /etc/localtime:/etc/localtime:ro
